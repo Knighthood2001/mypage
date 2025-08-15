@@ -54,11 +54,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const blogDisplay = document.getElementById('blog-display-content');
     const prevMonthBtn = document.getElementById('prev-month');
     const nextMonthBtn = document.getElementById('next-month');
-    const initialDisplayContent = blogDisplay.innerHTML;
+    
+    const blogPostForm = document.getElementById('blog-post-form');
+    const placeholderText = document.querySelector('.placeholder-text');
 
     let currentDate = new Date();
     // Go to October 2023 to show the example posts
     currentDate.setFullYear(2023, 9); 
+    let selectedDateStr = null;
+
+    function displayContentForDate(dateStr) {
+        // Hide form and placeholder, then show what's needed
+        blogPostForm.style.display = 'none';
+        placeholderText.style.display = 'none';
+
+        if (blogPosts.has(dateStr)) {
+            blogDisplay.innerHTML = blogPosts.get(dateStr);
+        } else {
+            // Show form to add a new post
+            const date = new Date(dateStr + 'T00:00:00');
+            document.getElementById('form-date').textContent = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+            document.getElementById('post-title').value = '';
+            document.getElementById('post-content').value = '';
+            blogPostForm.style.display = 'flex';
+        }
+    }
+
+    function handleDayClick(dayCell) {
+        if (dayCell.classList.contains('empty')) return;
+
+        document.querySelectorAll('.calendar-day.active').forEach(d => d.classList.remove('active'));
+        dayCell.classList.add('active');
+
+        selectedDateStr = dayCell.getAttribute('data-date');
+        displayContentForDate(selectedDateStr);
+    }
 
     function generateCalendar(date) {
         calendarGrid.innerHTML = '';
@@ -87,21 +117,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (blogPosts.has(dateStr)) {
                 dayCell.classList.add('has-post');
-                dayCell.addEventListener('mouseenter', () => {
-                    blogDisplay.innerHTML = blogPosts.get(dateStr);
-                    document.querySelectorAll('.calendar-day.active').forEach(d => d.classList.remove('active'));
-                    dayCell.classList.add('active');
-                });
-                dayCell.addEventListener('mouseleave', () => {
-                    // Optional: reset on mouse leave, or keep it displayed
-                    // blogDisplay.innerHTML = initialDisplayContent;
-                    // dayCell.classList.remove('active');
-                });
             }
+
+            dayCell.addEventListener('click', () => handleDayClick(dayCell));
 
             calendarGrid.appendChild(dayCell);
         }
     }
+
+    blogPostForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!selectedDateStr) return;
+
+        const title = document.getElementById('post-title').value;
+        const content = document.getElementById('post-content').value;
+        const date = new Date(selectedDateStr + 'T00:00:00');
+        const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+        const newPostHTML = `
+            <div class="blog-date">${formattedDate}</div>
+            <h3>${title}</h3>
+            <p>${content}</p>
+            <a href="#" class="read-more">Read More &rarr;</a>
+        `;
+
+        blogPosts.set(selectedDateStr, newPostHTML);
+        displayContentForDate(selectedDateStr);
+
+        // Update calendar view
+        const dayCell = document.querySelector(`.calendar-day[data-date="${selectedDateStr}"]`);
+        if (dayCell) {
+            dayCell.classList.add('has-post');
+        }
+    });
 
     prevMonthBtn.addEventListener('click', () => {
         currentDate.setMonth(currentDate.getMonth() - 1);
