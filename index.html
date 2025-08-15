@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="header">
+        <nav class="navbar">
+            <a href="#home" class="nav-logo">My Portfolio</a>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="#home" class="nav-link active">Home</a></li>
+                <li class="nav-item"><a href="#projects" class="nav-link">Projects</a></li>
+                <li class="nav-item"><a href="#blog" class="nav-link">Blog</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="section">
+            <div class="hero">
+                <div class="hero-text">
+                    <h1>Hi, I'm [Your Name]</h1>
+                    <p class="subtitle">Developer & Creator</p>
+                    <p>I build things for the web, create useful tools, and document my journey. Welcome to my personal corner of the internet.</p>
+                    <div class="social-links">
+                        <a href="#" target="_blank">GitHub</a>
+                        <a href="#" target="_blank">LinkedIn</a>
+                        <a href="#" target="_blank">Twitter</a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <img src="profile_picture.png" alt="My Profile Picture">
+                </div>
+            </div>
+        </section>
+
+        <section id="projects" class="section">
+            <h2>Projects</h2>
+            <div class="project-grid">
+                <div class="project-card">
+                    <img src="python_logo.png" alt="Python Project" class="project-icon">
+                    <h3>DataWrangler</h3>
+                    <p>An intuitive Python library for cleaning, transforming, and analyzing data. Simplifies complex data manipulation tasks.</p>
+                    <div class="project-tags">
+                        <span>Python</span>
+                        <span>Pandas</span>
+                        <span>Data Science</span>
+                    </div>
+                    <a href="#" class="project-link">View on GitHub &rarr;</a>
+                </div>
+                <div class="project-card">
+                    <img src="vscode_logo.png" alt="VSCode Project" class="project-icon">
+                    <h3>CodeGlow</h3>
+                    <p>A VSCode extension that provides beautiful, customizable themes to enhance your coding experience.</p>
+                    <div class="project-tags">
+                        <span>VSCode</span>
+                        <span>TypeScript</span>
+                        <span>Themes</span>
+                    </div>
+                    <a href="#" class="project-link">View on Marketplace &rarr;</a>
+                </div>
+                <div class="project-card">
+                    <h3>More to Come</h3>
+                    <p>I'm always working on new and exciting things. Stay tuned for more projects!</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="blog" class="section">
+            <h2>Daily Updates & Benefits</h2>
+            <div class="blog-list">
+                <article class="blog-post">
+                    <div class="blog-date">Oct 26, 2023</div>
+                    <h3>My Journey into Open Source</h3>
+                    <p>Today I made my first contribution to an open-source project. It was a small bug fix, but it felt amazing to be a part of something bigger. The benefit? I learned about a new codebase and collaborated with other developers.</p>
+                    <a href="#" class="read-more">Read More &rarr;</a>
+                </article>
+                <article class="blog-post">
+                    <div class="blog-date">Oct 25, 2023</div>
+                    <h3>The Power of Daily Habits</h3>
+                    <p>I've been coding for at least one hour every single day for the past month. The daily benefit is clear: consistency builds momentum faster than sporadic long sessions. My skills have improved noticeably.</p>
+                    <a href="#" class="read-more">Read More &rarr;</a>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2023 [Your Name]. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
