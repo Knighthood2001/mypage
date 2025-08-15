@@ -98,6 +98,23 @@ h2 {
     color: var(--accent-color);
 }
 
+.project-category {
+    margin-bottom: 4rem;
+}
+
+.project-category:last-of-type {
+    margin-bottom: 0;
+}
+
+.project-category h3 {
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+    color: var(--font-color);
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    text-align: left;
+}
+
 .hero {
     display: flex;
     align-items: center;
@@ -258,4 +275,3 @@ h2 {
         display: none; /* Simplification for this example, a hamburger menu would be better */
     }
 }
-
