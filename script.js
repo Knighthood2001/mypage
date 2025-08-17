@@ -54,62 +54,62 @@ document.addEventListener('DOMContentLoaded', () => {
     const blogDisplay = document.getElementById('blog-display-content');
     const prevMonthBtn = document.getElementById('prev-month');
     const nextMonthBtn = document.getElementById('next-month');
-    
+
     const blogPostForm = document.getElementById('blog-post-form');
     const placeholderText = document.querySelector('.placeholder-text');
 
-    let currentDate = new Date(); 
+    let currentDate = new Date();
     let selectedDateStr = null;
 
     function displayContentForDate(dateStr) {
         // Hide form first
         blogPostForm.style.display = 'none';
-        
+
         // Hide placeholder text
         if (placeholderText) {
             placeholderText.style.display = 'none';
         }
-        
+
         if (blogPosts.has(dateStr) && !isEditMode) {
             // Show existing post in view mode
             // Create a temporary div to show content without affecting the form
             const contentDiv = document.createElement('div');
             contentDiv.innerHTML = blogPosts.get(dateStr);
-            
+
             // Clear only non-form content
             const existingContent = blogDisplay.querySelector('.temp-content');
             if (existingContent) {
                 existingContent.remove();
             }
-            
+
             contentDiv.className = 'temp-content';
             blogDisplay.insertBefore(contentDiv, blogPostForm);
-            
+
         } else if (isEditMode) {
             // Show form to add/edit a post (in edit mode)
             const date = new Date(dateStr + 'T00:00:00');
             document.getElementById('form-date').textContent = date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
-            
+
             // Clear any existing content display
             const existingContent = blogDisplay.querySelector('.temp-content');
             if (existingContent) {
                 existingContent.remove();
             }
-            
+
             // If post exists, pre-fill the form for editing
             if (blogPosts.has(dateStr)) {
                 const existingContent = blogPosts.get(dateStr);
                 // Extract title and content from existing HTML (simple parsing)
                 const titleMatch = existingContent.match(/<h3>(.*?)<\/h3>/);
                 const contentMatch = existingContent.match(/<p>(.*?)<\/p>/);
-                
+
                 document.getElementById('post-title').value = titleMatch ? titleMatch[1] : '';
                 document.getElementById('post-content').value = contentMatch ? contentMatch[1] : '';
             } else {
                 document.getElementById('post-title').value = '';
                 document.getElementById('post-content').value = '';
             }
-            
+
             blogPostForm.style.display = 'flex';
         } else {
             // Show placeholder for non-edit mode
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-        // Edit mode toggle (hidden by default)
+    // Edit mode toggle (hidden by default)
     const editModeToggle = document.createElement('button');
     editModeToggle.textContent = '进入编辑模式';
     editModeToggle.style.position = 'fixed';
@@ -183,33 +183,149 @@ document.addEventListener('DOMContentLoaded', () => {
     editModeToggle.style.cursor = 'pointer';
     document.body.appendChild(editModeToggle);
 
+    // Create custom password dialog
+    function createPasswordDialog() {
+        return new Promise((resolve) => {
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+
+            // Create dialog
+            const dialog = document.createElement('div');
+            dialog.style.cssText = `
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                text-align: center;
+                min-width: 300px;
+            `;
+
+            // Create content
+            dialog.innerHTML = `
+                <h3 style="margin-top: 0; color: #333;">输入密码以启用编辑模式</h3>
+                <input type="password" id="password-input" placeholder="请输入密码" style="
+                    width: 100%;
+                    padding: 10px;
+                    margin: 15px 0;
+                    border: 2px solid #ddd;
+                    border-radius: 5px;
+                    font-size: 16px;
+                    box-sizing: border-box;
+                ">
+                <div style="margin-top: 20px;">
+                    <button id="password-ok" style="
+                        background-color: #4CAF50;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        margin: 0 5px;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        font-size: 14px;
+                    ">确定</button>
+                    <button id="password-cancel" style="
+                        background-color: #f44336;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        margin: 0 5px;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        font-size: 14px;
+                    ">取消</button>
+                </div>
+            `;
+
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+
+            const passwordInput = dialog.querySelector('#password-input');
+            const okButton = dialog.querySelector('#password-ok');
+            const cancelButton = dialog.querySelector('#password-cancel');
+
+            // Focus on input
+            setTimeout(() => passwordInput.focus(), 100);
+
+            // Handle OK button
+            const handleOk = () => {
+                const password = passwordInput.value;
+                document.body.removeChild(overlay);
+                resolve(password);
+            };
+
+            // Handle Cancel button
+            const handleCancel = () => {
+                document.body.removeChild(overlay);
+                resolve(null);
+            };
+
+            // Event listeners
+            okButton.addEventListener('click', handleOk);
+            cancelButton.addEventListener('click', handleCancel);
+
+            // Handle Enter key
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleOk();
+                }
+            });
+
+            // Handle Escape key
+            document.addEventListener('keydown', function escapeHandler(e) {
+                if (e.key === 'Escape') {
+                    document.removeEventListener('keydown', escapeHandler);
+                    handleCancel();
+                }
+            });
+
+            // Handle click outside dialog
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    handleCancel();
+                }
+            });
+        });
+    }
+
     let isEditMode = false;
-    editModeToggle.addEventListener('click', () => {
+    editModeToggle.addEventListener('click', async () => {
         if (!isEditMode) {
-            const password = prompt('输入密码以启用编辑模式:');
+            const password = await createPasswordDialog();
             if (password === 'wubidong') {
                 isEditMode = true;
                 editModeToggle.textContent = '退出编辑模式';
                 alert('编辑模式已启用');
-            } else {
+            } else if (password !== null) {
                 alert('密码错误!');
             }
         } else {
             isEditMode = false;
             editModeToggle.textContent = '进入编辑模式';
             blogPostForm.style.display = 'none';
-            
+
             // Clear any temporary content
             const existingContent = blogDisplay.querySelector('.temp-content');
             if (existingContent) {
                 existingContent.remove();
             }
-            
+
             // Show placeholder
             if (placeholderText) {
                 placeholderText.style.display = 'block';
             }
-            
+
             selectedDateStr = null;
             // Remove active state from calendar days
             document.querySelectorAll('.calendar-day.active').forEach(d => d.classList.remove('active'));
@@ -232,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         blogPosts.set(selectedDateStr, newPostHTML);
-        
+
         // Save to JSON file
         const postsObject = Object.fromEntries(blogPosts);
         fetch('save_posts', {
@@ -242,17 +358,17 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             body: JSON.stringify(postsObject)
         })
-        .then(response => response.text())
-        .then(data => {
-            console.log('Success:', data);
-            displayContentForDate(selectedDateStr);
-            // Refresh calendar to show new post indicator
-            generateCalendar(currentDate);
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-            alert('保存失败，请重试');
-        });
+            .then(response => response.text())
+            .then(data => {
+                console.log('Success:', data);
+                displayContentForDate(selectedDateStr);
+                // Refresh calendar to show new post indicator
+                generateCalendar(currentDate);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('保存失败，请重试');
+            });
 
         // Update calendar view
         const dayCell = document.querySelector(`.calendar-day[data-date="${selectedDateStr}"]`);
@@ -278,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('No blog_posts.json file found, starting with empty posts.');
             });
     }
-    
+
     loadPosts();
 
     prevMonthBtn.addEventListener('click', () => {
