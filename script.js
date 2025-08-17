@@ -62,19 +62,64 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedDateStr = null;
 
     function displayContentForDate(dateStr) {
-        // Hide form and placeholder, then show what's needed
+        // Hide form first
         blogPostForm.style.display = 'none';
-        placeholderText.style.display = 'none';
-
-        if (blogPosts.has(dateStr)) {
-            blogDisplay.innerHTML = blogPosts.get(dateStr);
-        } else {
-            // Show form to add a new post
+        
+        // Hide placeholder text
+        if (placeholderText) {
+            placeholderText.style.display = 'none';
+        }
+        
+        if (blogPosts.has(dateStr) && !isEditMode) {
+            // Show existing post in view mode
+            // Create a temporary div to show content without affecting the form
+            const contentDiv = document.createElement('div');
+            contentDiv.innerHTML = blogPosts.get(dateStr);
+            
+            // Clear only non-form content
+            const existingContent = blogDisplay.querySelector('.temp-content');
+            if (existingContent) {
+                existingContent.remove();
+            }
+            
+            contentDiv.className = 'temp-content';
+            blogDisplay.insertBefore(contentDiv, blogPostForm);
+            
+        } else if (isEditMode) {
+            // Show form to add/edit a post (in edit mode)
             const date = new Date(dateStr + 'T00:00:00');
-            document.getElementById('form-date').textContent = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-            document.getElementById('post-title').value = '';
-            document.getElementById('post-content').value = '';
+            document.getElementById('form-date').textContent = date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
+            
+            // Clear any existing content display
+            const existingContent = blogDisplay.querySelector('.temp-content');
+            if (existingContent) {
+                existingContent.remove();
+            }
+            
+            // If post exists, pre-fill the form for editing
+            if (blogPosts.has(dateStr)) {
+                const existingContent = blogPosts.get(dateStr);
+                // Extract title and content from existing HTML (simple parsing)
+                const titleMatch = existingContent.match(/<h3>(.*?)<\/h3>/);
+                const contentMatch = existingContent.match(/<p>(.*?)<\/p>/);
+                
+                document.getElementById('post-title').value = titleMatch ? titleMatch[1] : '';
+                document.getElementById('post-content').value = contentMatch ? contentMatch[1] : '';
+            } else {
+                document.getElementById('post-title').value = '';
+                document.getElementById('post-content').value = '';
+            }
+            
             blogPostForm.style.display = 'flex';
+        } else {
+            // Show placeholder for non-edit mode
+            const existingContent = blogDisplay.querySelector('.temp-content');
+            if (existingContent) {
+                existingContent.remove();
+            }
+            if (placeholderText) {
+                placeholderText.style.display = 'block';
+            }
         }
     }
 
@@ -125,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Edit mode toggle (hidden by default)
     const editModeToggle = document.createElement('button');
-    editModeToggle.textContent = 'Enter Edit Mode';
+    editModeToggle.textContent = '进入编辑模式';
     editModeToggle.style.position = 'fixed';
     editModeToggle.style.bottom = '20px';
     editModeToggle.style.right = '20px';
@@ -140,14 +185,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let isEditMode = false;
     editModeToggle.addEventListener('click', () => {
-        const password = prompt('Enter password to enable edit mode:');
-        if (password === 'wubidong') { // Replace with your actual password
-            isEditMode = !isEditMode;
-            editModeToggle.textContent = isEditMode ? 'Exit Edit Mode' : 'Enter Edit Mode';
-            placeholderText.style.display = isEditMode ? 'none' : 'block';
-            blogPostForm.style.display = isEditMode ? 'flex' : 'none';
+        if (!isEditMode) {
+            const password = prompt('输入密码以启用编辑模式:');
+            if (password === 'wubidong') {
+                isEditMode = true;
+                editModeToggle.textContent = '退出编辑模式';
+                alert('编辑模式已启用');
+            } else {
+                alert('密码错误!');
+            }
         } else {
-            alert('Incorrect password!');
+            isEditMode = false;
+            editModeToggle.textContent = '进入编辑模式';
+            blogPostForm.style.display = 'none';
+            
+            // Clear any temporary content
+            const existingContent = blogDisplay.querySelector('.temp-content');
+            if (existingContent) {
+                existingContent.remove();
+            }
+            
+            // Show placeholder
+            if (placeholderText) {
+                placeholderText.style.display = 'block';
+            }
+            
+            selectedDateStr = null;
+            // Remove active state from calendar days
+            document.querySelectorAll('.calendar-day.active').forEach(d => d.classList.remove('active'));
         }
     });
 
@@ -171,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Save to JSON file
         const postsObject = Object.fromEntries(blogPosts);
-        fetch('save_posts.php', {
+        fetch('save_posts', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -182,10 +247,12 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(data => {
             console.log('Success:', data);
             displayContentForDate(selectedDateStr);
+            // Refresh calendar to show new post indicator
+            generateCalendar(currentDate);
         })
         .catch((error) => {
             console.error('Error:', error);
-            displayContentForDate(selectedDateStr);
+            alert('保存失败，请重试');
         });
 
         // Update calendar view
@@ -196,16 +263,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Load saved posts from JSON file
-    fetch('blog_posts.json')
-        .then(response => response.json())
-        .then(data => {
-            if (data) {
-                blogPosts = new Map(Object.entries(data));
-            }
-        })
-        .catch(() => {
-            console.log('No blog_posts.json file found, starting with empty posts.');
-        });
+    function loadPosts() {
+        fetch('blog_posts.json')
+            .then(response => response.json())
+            .then(data => {
+                if (data) {
+                    blogPosts.clear();
+                    Object.entries(data).forEach(([date, content]) => {
+                        blogPosts.set(date, content);
+                    });
+                    generateCalendar(currentDate);
+                }
+            })
+            .catch(() => {
+                console.log('No blog_posts.json file found, starting with empty posts.');
+            });
+    }
+    
+    loadPosts();
 
     prevMonthBtn.addEventListener('click', () => {
         currentDate.setMonth(currentDate.getMonth() - 1);
