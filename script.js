@@ -306,7 +306,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (password === 'wubidong') {
                 isEditMode = true;
                 editModeToggle.textContent = '退出编辑模式';
-                alert('编辑模式已启用');
             } else if (password !== null) {
                 alert('密码错误!');
             }
