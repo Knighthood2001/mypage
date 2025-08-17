@@ -229,7 +229,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="blog-date">${formattedDate}</div>
             <h3>${title}</h3>
             <p>${content}</p>
-            <a href="#" class="read-more">Read More &rarr;</a>
         `;
 
         blogPosts.set(selectedDateStr, newPostHTML);
