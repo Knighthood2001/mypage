@@ -58,9 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const blogPostForm = document.getElementById('blog-post-form');
     const placeholderText = document.querySelector('.placeholder-text');
 
-    let currentDate = new Date();
-    // Go to October 2023 to show the example posts
-    currentDate.setFullYear(2023, 9); 
+    let currentDate = new Date(); 
     let selectedDateStr = null;
 
     function displayContentForDate(dateStr) {
@@ -125,9 +123,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+        // Edit mode toggle (hidden by default)
+    const editModeToggle = document.createElement('button');
+    editModeToggle.textContent = 'Enter Edit Mode';
+    editModeToggle.style.position = 'fixed';
+    editModeToggle.style.bottom = '20px';
+    editModeToggle.style.right = '20px';
+    editModeToggle.style.zIndex = '1000';
+    editModeToggle.style.padding = '10px';
+    editModeToggle.style.backgroundColor = '#4CAF50';
+    editModeToggle.style.color = 'white';
+    editModeToggle.style.border = 'none';
+    editModeToggle.style.borderRadius = '5px';
+    editModeToggle.style.cursor = 'pointer';
+    document.body.appendChild(editModeToggle);
+
+    let isEditMode = false;
+    editModeToggle.addEventListener('click', () => {
+        const password = prompt('Enter password to enable edit mode:');
+        if (password === 'wubidong') { // Replace with your actual password
+            isEditMode = !isEditMode;
+            editModeToggle.textContent = isEditMode ? 'Exit Edit Mode' : 'Enter Edit Mode';
+            placeholderText.style.display = isEditMode ? 'none' : 'block';
+            blogPostForm.style.display = isEditMode ? 'flex' : 'none';
+        } else {
+            alert('Incorrect password!');
+        }
+    });
+
     blogPostForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        if (!selectedDateStr) return;
+        if (!selectedDateStr || !isEditMode) return;
 
         const title = document.getElementById('post-title').value;
         const content = document.getElementById('post-content').value;
@@ -142,7 +168,25 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         blogPosts.set(selectedDateStr, newPostHTML);
-        displayContentForDate(selectedDateStr);
+        
+        // Save to JSON file
+        const postsObject = Object.fromEntries(blogPosts);
+        fetch('save_posts.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(postsObject)
+        })
+        .then(response => response.text())
+        .then(data => {
+            console.log('Success:', data);
+            displayContentForDate(selectedDateStr);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            displayContentForDate(selectedDateStr);
+        });
 
         // Update calendar view
         const dayCell = document.querySelector(`.calendar-day[data-date="${selectedDateStr}"]`);
@@ -150,6 +194,18 @@ document.addEventListener('DOMContentLoaded', () => {
             dayCell.classList.add('has-post');
         }
     });
+
+    // Load saved posts from JSON file
+    fetch('blog_posts.json')
+        .then(response => response.json())
+        .then(data => {
+            if (data) {
+                blogPosts = new Map(Object.entries(data));
+            }
+        })
+        .catch(() => {
+            console.log('No blog_posts.json file found, starting with empty posts.');
+        });
 
     prevMonthBtn.addEventListener('click', () => {
         currentDate.setMonth(currentDate.getMonth() - 1);
