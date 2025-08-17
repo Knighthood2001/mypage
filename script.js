@@ -303,17 +303,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let isEditMode = false;
+    let currentPassword = null; // 存储当前会话的密码
+    
     editModeToggle.addEventListener('click', async () => {
         if (!isEditMode) {
             const password = await createPasswordDialog();
-            if (password === 'wubidong') {
-                isEditMode = true;
-                editModeToggle.textContent = '退出编辑模式';
-            } else if (password !== null) {
-                alert('密码错误!');
+            if (password !== null) {
+                // 向后端验证密码
+                try {
+                    const response = await fetch('verify_password', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ password: password })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        isEditMode = true;
+                        currentPassword = password; // 保存密码用于后续保存操作
+                        editModeToggle.textContent = '退出编辑模式';
+                    } else {
+                        alert('密码错误!');
+                    }
+                } catch (error) {
+                    console.error('Password verification failed:', error);
+                    alert('验证失败，请重试');
+                }
             }
         } else {
             isEditMode = false;
+            currentPassword = null; // 清除密码
             editModeToggle.textContent = '进入编辑模式';
             blogPostForm.style.display = 'none';
 
@@ -356,12 +377,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Save to JSON file
         const postsObject = Object.fromEntries(blogPosts);
+        // 添加密码到请求中进行验证
+        const saveData = { ...postsObject, password: currentPassword };
+        
         fetch('save_posts', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(postsObject)
+            body: JSON.stringify(saveData)
         })
             .then(response => response.text())
             .then(data => {

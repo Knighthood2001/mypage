@@ -1,6 +1,10 @@
 from flask import Flask, request, jsonify, send_from_directory
 import os
 import json
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -32,11 +36,35 @@ def static_files(filename):
 def get_posts():
     return jsonify(load_data())
 
+@app.route("/verify_password", methods=["POST"])
+def verify_password():
+    try:
+        data = request.get_json()
+        password = data.get('password', '')
+        # 从环境变量读取密码
+        correct_password = os.getenv('ADMIN_PASSWORD', 'wubidong')
+        
+        if password == correct_password:
+            return jsonify({"success": True})
+        else:
+            return jsonify({"success": False}), 401
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @app.route("/save_posts", methods=["POST"])
 def save_posts():
     try:
         data = request.get_json()
-        save_data(data)
+        # 验证密码
+        password = data.get('password', '')
+        correct_password = os.getenv('ADMIN_PASSWORD', 'wubidong')
+        
+        if password != correct_password:
+            return "Unauthorized", 401
+            
+        # 移除密码字段，只保存文章数据
+        posts_data = {k: v for k, v in data.items() if k != 'password'}
+        save_data(posts_data)
         return "Posts saved successfully"
     except Exception as e:
         return f"Error saving posts: {str(e)}", 500
