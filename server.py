@@ -42,7 +42,7 @@ def verify_password():
         data = request.get_json()
         password = data.get('password', '')
         # 从环境变量读取密码
-        correct_password = os.getenv('ADMIN_PASSWORD', 'wubidong')
+        correct_password = os.getenv('ADMIN_PASSWORD', '123456')
         
         if password == correct_password:
             return jsonify({"success": True})
@@ -57,7 +57,7 @@ def save_posts():
         data = request.get_json()
         # 验证密码
         password = data.get('password', '')
-        correct_password = os.getenv('ADMIN_PASSWORD', 'wubidong')
+        correct_password = os.getenv('ADMIN_PASSWORD', '123456')
         
         if password != correct_password:
             return "Unauthorized", 401
