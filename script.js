@@ -100,11 +100,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (blogPosts.has(dateStr)) {
                 const existingContent = blogPosts.get(dateStr);
                 // Extract title and content from existing HTML (simple parsing)
-                const titleMatch = existingContent.match(/<h3>(.*?)<\/h3>/);
-                const contentMatch = existingContent.match(/<p>(.*?)<\/p>/);
+                // Use the 's' flag to make . match newlines as well
+                const titleMatch = existingContent.match(/<h3>(.*?)<\/h3>/s);
+                const contentMatch = existingContent.match(/<p>(.*?)<\/p>/s);
 
                 document.getElementById('post-title').value = titleMatch ? titleMatch[1] : '';
-                document.getElementById('post-content').value = contentMatch ? contentMatch[1] : '';
+                // Convert <br> tags back to line breaks for editing
+                const contentText = contentMatch ? contentMatch[1].replace(/<br\s*\/?>/gi, '\n') : '';
+                document.getElementById('post-content').value = contentText;
             } else {
                 document.getElementById('post-title').value = '';
                 document.getElementById('post-content').value = '';
@@ -340,10 +343,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const date = new Date(selectedDateStr + 'T00:00:00');
         const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
+        // Convert line breaks to <br> tags for HTML display
+        const htmlContent = content.replace(/\n/g, '<br>');
+
         const newPostHTML = `
             <div class="blog-date">${formattedDate}</div>
             <h3>${title}</h3>
-            <p>${content}</p>
+            <p>${htmlContent}</p>
         `;
 
         blogPosts.set(selectedDateStr, newPostHTML);
