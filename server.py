@@ -70,4 +70,9 @@ def save_posts():
         return f"Error saving posts: {str(e)}", 500
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # 根据环境变量决定是否开启调试模式
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    # 开发环境用5000，生产环境用8000
+    port = int(os.getenv('PORT', 5000 if debug_mode else 8000))
+    
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)
