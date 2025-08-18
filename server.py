@@ -26,11 +26,24 @@ def save_data(data):
 # 提供静态文件
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    return send_from_directory('static/html', 'index.html')
 
-@app.route('/<path:filename>')
-def static_files(filename):
-    return send_from_directory('.', filename)
+# 静态文件路由
+@app.route('/css/<path:filename>')
+def css_files(filename):
+    return send_from_directory('static/css', filename)
+
+@app.route('/js/<path:filename>')
+def js_files(filename):
+    return send_from_directory('static/js', filename)
+
+@app.route('/imgs/<path:filename>')
+def img_files(filename):
+    return send_from_directory('imgs', filename)
+
+@app.route('/images/<path:filename>')
+def images_files(filename):
+    return send_from_directory('static/images', filename)
 
 @app.route("/blog_posts.json", methods=["GET"])
 def get_posts():
@@ -70,9 +83,8 @@ def save_posts():
         return f"Error saving posts: {str(e)}", 500
 
 if __name__ == "__main__":
-    # 根据环境变量决定是否开启调试模式
+    # 开发模式直接运行
     debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
-    # 开发环境用5000，生产环境用8000
-    port = int(os.getenv('PORT', 5000 if debug_mode else 8000))
+    port = int(os.getenv('PORT', 5000))
     
     app.run(debug=debug_mode, host='0.0.0.0', port=port)
